@@ -2,6 +2,7 @@ package broker
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"code.cloudfoundry.org/lager"
@@ -28,7 +29,6 @@ type Config struct {
 
 func NewSchedulerImpl(logger lager.Logger) (broker *SchedulerBroker) {
 	var credentials interface{}
-
 	fmt.Printf("Credentials: %v\n", credentials)
 
 	return &SchedulerBroker{
@@ -77,19 +77,33 @@ func (broker *SchedulerBroker) Services(ctx context.Context) ([]brokerapi.Servic
 // Provision creates a new service instance
 //   PUT /v2/service_instances/{instance_id}
 func (broker *SchedulerBroker) Provision(ctx context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
-	return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("unimplemented")
+	var parameters interface{}
+	json.Unmarshal(details.RawParameters, &parameters)
+	broker.Instances[instanceID] = brokerapi.GetInstanceDetailsSpec{
+		ServiceID:  details.ServiceID,
+		PlanID:     details.PlanID,
+		Parameters: parameters,
+	}
+	fmt.Println(broker.Instances[instanceID])
+	spec := brokerapi.ProvisionedServiceSpec{}
+	return spec, nil
 }
 
 // Deprovision deletes an existing service instance
 //  DELETE /v2/service_instances/{instance_id}
 func (broker *SchedulerBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
+
 	return brokerapi.DeprovisionServiceSpec{}, fmt.Errorf("unimplemented")
 }
 
 // GetInstance fetches information about a service instance
 //   GET /v2/service_instances/{instance_id}
-func (broker *SchedulerBroker) GetInstance(ctx context.Context, instanceID string) (brokerapi.GetInstanceDetailsSpec, error) {
-	return brokerapi.GetInstanceDetailsSpec{}, fmt.Errorf("unimplemented")
+func (broker *SchedulerBroker) GetInstance(ctx context.Context, instanceID string) (spec brokerapi.GetInstanceDetailsSpec, err error) {
+	if val, ok := broker.Instances[instanceID]; ok {
+		fmt.Println(val)
+		return val, nil
+	}
+	return brokerapi.GetInstanceDetailsSpec{}, fmt.Errorf("InstanceID %s not found", instanceID)
 }
 
 // Update modifies an existing service instance

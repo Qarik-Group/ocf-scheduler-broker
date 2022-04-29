@@ -28,7 +28,9 @@ type Config struct {
 }
 
 func NewSchedulerImpl(logger lager.Logger) (broker *SchedulerBroker) {
-	var credentials interface{}
+	credentials := map[string]interface{}{}
+	credentials["credentials1"] = "example-credentials"
+	credentials["credentials2"] = "More example-credentials"
 	fmt.Printf("Credentials: %v\n", credentials)
 
 	return &SchedulerBroker{
@@ -92,15 +94,17 @@ func (broker *SchedulerBroker) Provision(ctx context.Context, instanceID string,
 // Deprovision deletes an existing service instance
 //  DELETE /v2/service_instances/{instance_id}
 func (broker *SchedulerBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
-
-	return brokerapi.DeprovisionServiceSpec{}, fmt.Errorf("unimplemented")
+	return brokerapi.DeprovisionServiceSpec{
+		IsAsync:       true,
+		OperationData: "I have no idea what operation data is",
+	}, nil
 }
 
 // GetInstance fetches information about a service instance
 //   GET /v2/service_instances/{instance_id}
 func (broker *SchedulerBroker) GetInstance(ctx context.Context, instanceID string) (spec brokerapi.GetInstanceDetailsSpec, err error) {
 	if val, ok := broker.Instances[instanceID]; ok {
-		fmt.Println(val)
+		fmt.Println("Found and returned!")
 		return val, nil
 	}
 	return brokerapi.GetInstanceDetailsSpec{}, fmt.Errorf("InstanceID %s not found", instanceID)
@@ -109,36 +113,53 @@ func (broker *SchedulerBroker) GetInstance(ctx context.Context, instanceID strin
 // Update modifies an existing service instance
 //  PATCH /v2/service_instances/{instance_id}
 func (broker *SchedulerBroker) Update(ctx context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
-	return brokerapi.UpdateServiceSpec{}, fmt.Errorf("unimplemented")
+
+	return brokerapi.UpdateServiceSpec{
+		IsAsync: true,
+	}, nil
 }
 
 // LastOperation fetches last operation state for a service instance
 //   GET /v2/service_instances/{instance_id}/last_operation
 func (broker *SchedulerBroker) LastOperation(ctx context.Context, instanceID string, details brokerapi.PollDetails) (brokerapi.LastOperation, error) {
-	return brokerapi.LastOperation{}, fmt.Errorf("unimplemented")
+	return brokerapi.LastOperation{
+		State: "success",
+	}, nil
 }
 
 // Bind creates a new service binding
 //   PUT /v2/service_instances/{instance_id}/service_bindings/{binding_id}
 func (broker *SchedulerBroker) Bind(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, asyncAllowed bool) (brokerapi.Binding,
 	error) {
-	return brokerapi.Binding{}, fmt.Errorf("unimplemented")
+	var parameters interface{}
+	broker.Bindings[bindingID] = brokerapi.GetBindingSpec{
+		Credentials: broker.Config.Credentials,
+		Parameters:  parameters,
+	}
+	return brokerapi.Binding{
+		Credentials: broker.Config.Credentials,
+	}, nil
 }
 
 // Unbind deletes an existing service binding
 //   DELETE /v2/service_instances/{instance_id}/service_bindings/{binding_id}
 func (broker *SchedulerBroker) Unbind(ctx context.Context, instanceID string, bindingID string, details brokerapi.UnbindDetails, asyncAllowed bool) (brokerapi.UnbindSpec, error) {
-	return brokerapi.UnbindSpec{}, fmt.Errorf("unimplemented")
+	return brokerapi.UnbindSpec{}, nil
 }
 
 // GetBinding fetches an existing service binding
 //   GET /v2/service_instances/{instance_id}/service_bindings/{binding_id}
 func (broker *SchedulerBroker) GetBinding(ctx context.Context, instanceID string, bindingID string) (brokerapi.GetBindingSpec, error) {
-	return brokerapi.GetBindingSpec{}, fmt.Errorf("unimplemented")
+	if val, ok := broker.Bindings[bindingID]; ok {
+		return val, nil
+	}
+	return brokerapi.GetBindingSpec{}, fmt.Errorf("BindingID %s not found", bindingID)
 }
 
 // LastBindingOperation fetches last operation state for a service binding
 //   GET /v2/service_instances/{instance_id}/service_bindings/{binding_id}/last_operation
 func (broker *SchedulerBroker) LastBindingOperation(ctx context.Context, instanceID string, bindingID string, details brokerapi.PollDetails) (brokerapi.LastOperation, error) {
-	return brokerapi.LastOperation{}, fmt.Errorf("unimplemented")
+	return brokerapi.LastOperation{
+		State: "success",
+	}, nil
 }

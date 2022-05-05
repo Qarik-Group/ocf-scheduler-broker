@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"code.cloudfoundry.org/lager"
 	brokerapi "github.com/pivotal-cf/brokerapi/domain"
@@ -27,11 +28,19 @@ type Config struct {
 	Free           bool
 }
 
+func envOr(key string, defaultValue string) string {
+	value := os.Getenv(key)
+
+	if len(value) == 0 {
+		return defaultValue
+	}
+
+	return value
+}
+
 func NewSchedulerImpl(logger lager.Logger) (broker *SchedulerBroker) {
 	credentials := map[string]interface{}{}
-	credentials["credentials1"] = "example-credentials"
-	credentials["credentials2"] = "More example-credentials"
-	fmt.Printf("Credentials: %v\n", credentials)
+	credentials["api_endpoint"] = envOr("SCHEDULER_URL", "http://localhost:8000")
 
 	return &SchedulerBroker{
 		Logger:    logger,

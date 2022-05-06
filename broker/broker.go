@@ -7,6 +7,8 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	brokerapi "github.com/pivotal-cf/brokerapi/domain"
+
+	"github.com/starkandwayne/ocf-scheduler-broker/util"
 )
 
 type SchedulerBroker struct {
@@ -29,9 +31,7 @@ type Config struct {
 
 func NewSchedulerImpl(logger lager.Logger) (broker *SchedulerBroker) {
 	credentials := map[string]interface{}{}
-	credentials["credentials1"] = "example-credentials"
-	credentials["credentials2"] = "More example-credentials"
-	fmt.Printf("Credentials: %v\n", credentials)
+	credentials["api_endpoint"] = util.EnvOr("SCHEDULER_URL", "http://localhost:8000")
 
 	return &SchedulerBroker{
 		Logger:    logger,

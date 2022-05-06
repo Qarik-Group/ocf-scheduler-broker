@@ -6,8 +6,10 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
-	"example.com/broker"
 	"github.com/pivotal-cf/brokerapi"
+
+	"github.com/starkandwayne/ocf-scheduler-broker/broker"
+	"github.com/starkandwayne/ocf-scheduler-broker/util"
 )
 
 func statusAPI(w http.ResponseWriter, r *http.Request) {
@@ -21,8 +23,8 @@ func main() {
 	servicebroker := broker.NewSchedulerImpl(logger)
 
 	brokerCredentials := brokerapi.BrokerCredentials{
-		Username: "admin",
-		Password: "Test1234",
+		Username: util.EnvOr("AUTH_USER", "admin"),
+		Password: util.EnvOr("AUTH_PASSWORD", "Test1234"),
 	}
 
 	brokerAPI := brokerapi.New(servicebroker, logger, brokerCredentials)
@@ -31,10 +33,7 @@ func main() {
 
 	http.Handle("/", brokerAPI)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
+	port := util.EnvOr("PORT", "3000")
 
 	fmt.Println("\n\nStarting OCF Scheduler Service broker on 0.0.0.0:" + port)
 	logger.Fatal("http-listen", http.ListenAndServe("0.0.0.0:"+port, nil))

@@ -1,4 +1,5 @@
-module example.com
+module github.com/starkandwayne/ocf-scheduler-broker
+
 go 1.17
 
 require (
